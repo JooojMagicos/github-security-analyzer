@@ -8,6 +8,14 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'none'",
+};
+
 const RELEVANT_EXTENSIONS = new Set([
   '.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rb', '.php',
   '.cs', '.env', '.yml', '.yaml', '.json', '.sh', '.tf', '.toml',
@@ -25,8 +33,9 @@ const PRIORITY_PATTERNS = [
   /settings\.py$/i, /config\./i,
 ];
 
-const MAX_FILES = 15;
-const MAX_CHARS_PER_FILE = 4000;
+const MAX_FILES = 12;
+const MAX_CHARS_PER_FILE = 2500;
+const MAX_TOTAL_CHARS = 25_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
 
@@ -50,7 +59,7 @@ function isRateLimited(ip: string): boolean {
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    headers: { ...CORS_HEADERS, ...SECURITY_HEADERS, 'Content-Type': 'application/json' },
   });
 }
 
@@ -133,18 +142,37 @@ async function fetchRepoTree(owner: string, repo: string): Promise<GitHubTreeRes
   return res.json() as Promise<GitHubTreeResponse>;
 }
 
+const SYSTEM_PROMPT = `You are a senior application security engineer with 15+ years of experience in penetration testing and secure code review. Your job is to identify REAL, EXPLOITABLE security vulnerabilities — not code style issues or theoretical concerns.
+
+ONLY report a finding if ALL of the following are true:
+1. The vulnerability is present in the actual code shown, not inferred or assumed.
+2. It is exploitable by an attacker in a realistic scenario.
+3. It has a direct security impact (data breach, auth bypass, RCE, privilege escalation, data corruption, etc).
+
+DO NOT report any of the following — they are not security vulnerabilities:
+- Unpinned or caret (^) version ranges in package.json / requirements.txt
+- Missing comments, documentation, or logging
+- console.log / print / debug statements
+- Code style or readability issues
+- Generic "missing error handling" unless it directly causes a security impact
+- Missing rate limiting unless the endpoint is clearly sensitive
+- Theoretical risks with no evidence in the code
+- Strict equality (===) vs loose equality (==) in typed languages
+- Direct object references that have no evidence of missing authorization
+- Missing security headers in frontend config files (those belong at the infrastructure layer)
+
+When in doubt, do NOT include the finding. A false positive wastes the developer's time and erodes trust in the tool. Precision matters more than recall.`;
+
 function buildSecurityPrompt(
   owner: string,
   repo: string,
   files: { path: string; content: string }[],
-): string {
+): { system: string; user: string } {
   const fileBlock = files
     .map((f) => `### File: ${f.path}\n\`\`\`\n${f.content}\n\`\`\``)
     .join('\n\n');
 
-  return `You are an expert security engineer performing a thorough security audit of the GitHub repository "${owner}/${repo}".
-
-Analyze the following source files for security vulnerabilities, misconfigurations, and bad practices.
+  const user = `Perform a security audit of the GitHub repository "${owner}/${repo}".
 
 ${fileBlock}
 
@@ -168,24 +196,27 @@ Return ONLY a single valid JSON object — no markdown, no explanation, no code 
       "severity": "CRITICAL|HIGH|MEDIUM|LOW|INFO",
       "file": "path/to/file.ext",
       "line": null,
-      "description": "Clear description of the vulnerability.",
-      "evidence": "relevant code snippet or null",
-      "recommendation": "Specific actionable fix.",
+      "description": "Clear description of the vulnerability and how it can be exploited.",
+      "evidence": "exact code snippet showing the vulnerability, or null",
+      "recommendation": "Specific, actionable fix with example if possible.",
       "cwe": "CWE-XXX: CWE Name"
     }
   ],
-  "positives": ["Security positive 1", "Security positive 2"],
-  "recommendations": ["Top priority recommendation 1", "Top priority recommendation 2"],
-  "filesAnalyzed": ["list", "of", "file", "paths", "analyzed"]
+  "positives": ["What the code does well, where (file or pattern), and why it improves security — 1 to 2 sentences."],
+  "recommendations": ["Priority N — [File or Component]: Specific action to take, what to change or add, and what attack or risk it prevents."],
+  "filesAnalyzed": ["list", "of", "analyzed", "file", "paths"]
 }
 
-Score: 0–100 (100 = perfect security). Deduct points per finding severity: Critical −25, High −15, Medium −8, Low −3, Info −1. Cap at 0.
-stats must match the actual count of findings per severity.
-findings must be ordered Critical → High → Medium → Low → Info.
-Be thorough — look for: hardcoded secrets, injection vulnerabilities, insecure dependencies, weak crypto, IDOR, SSRF, path traversal, improper auth, exposed configs, CI/CD misconfigurations, supply chain risks.`;
+Rules:
+- Score: 0–100. Deduct per finding: Critical −25, High −15, Medium −8, Low −3, Info −1. Floor at 0.
+- stats counts must match the actual findings array.
+- findings must be ordered: Critical → High → Medium → Low → Info.
+- Focus on: hardcoded secrets, injection (SQL/command/LDAP), SSRF, path traversal, insecure deserialization, broken auth, exposed credentials, weak/missing crypto, CI/CD misconfigurations, supply chain risks, IDOR with missing auth checks.`;
+
+  return { system: SYSTEM_PROMPT, user };
 }
 
-async function callGroq(prompt: string, apiKey: string): Promise<string> {
+async function callGroq(prompt: { system: string; user: string }, apiKey: string): Promise<string> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
@@ -199,7 +230,10 @@ async function callGroq(prompt: string, apiKey: string): Promise<string> {
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: prompt.system },
+          { role: 'user', content: prompt.user },
+        ],
         temperature: 0.2,
         max_tokens: 4096,
         response_format: { type: 'json_object' },
@@ -292,7 +326,14 @@ export default {
       }),
     );
 
-    const validFiles = fileContents.filter((f): f is { path: string; content: string } => f !== null);
+    const validFiles: { path: string; content: string }[] = [];
+    let totalChars = 0;
+    for (const f of fileContents) {
+      if (!f) continue;
+      if (totalChars + f.content.length > MAX_TOTAL_CHARS) break;
+      validFiles.push(f);
+      totalChars += f.content.length;
+    }
 
     if (validFiles.length === 0) {
       return errorResponse('Could not read any files from this repository', 422);

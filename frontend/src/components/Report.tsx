@@ -5,7 +5,85 @@ import FindingCard from './FindingCard';
 
 interface Props {
   report: AnalysisReport;
+  repoUrl: string;
   onReset: () => void;
+}
+
+function generateReportMd(report: AnalysisReport, repoUrl: string): string {
+  const date = new Date().toISOString().split('T')[0];
+  const repoName = repoUrl.replace('https://github.com/', '');
+
+  const statsTable = SEVERITY_ORDER
+    .map((s) => `| ${s} | ${report.stats[s.toLowerCase() as keyof typeof report.stats]} |`)
+    .join('\n');
+
+  const findingsSections = report.findings.map((f) => {
+    const loc = f.file + (f.line ? `:${f.line}` : '');
+    const evidence = f.evidence ? `\n**Evidence:**\n\`\`\`\n${f.evidence}\n\`\`\`\n` : '';
+    return `### ${f.id}: ${f.title}
+
+| Field | Value |
+|-------|-------|
+| **Severity** | ${f.severity} |
+| **CWE** | ${f.cwe} |
+| **File** | \`${loc}\` |
+
+**Description:** ${f.description}
+${evidence}
+**Recommendation:** ${f.recommendation}`;
+  }).join('\n\n---\n\n');
+
+  const positives = report.positives.map((p) => `- ${p}`).join('\n');
+  const recommendations = report.recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n');
+  const files = report.filesAnalyzed.map((f) => `- \`${f}\``).join('\n');
+
+  return `# Security Report: ${repoName}
+
+| | |
+|-|-|
+| **Score** | ${report.score}/100 |
+| **Language** | ${report.language} |
+| **Date** | ${date} |
+| **Repository** | ${repoUrl} |
+
+## Summary
+
+${report.summary}
+
+## Statistics
+
+| Severity | Count |
+|----------|-------|
+${statsTable}
+
+## Findings
+
+${report.findings.length === 0 ? '_No findings._' : findingsSections}
+
+## Security Positives
+
+${report.positives.length === 0 ? '_None identified._' : positives}
+
+## Priority Recommendations
+
+${report.recommendations.length === 0 ? '_None._' : recommendations}
+
+## Files Analyzed
+
+${files}
+`;
+}
+
+function downloadReportMd(report: AnalysisReport, repoUrl: string) {
+  const content = generateReportMd(report, repoUrl);
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const repoName = repoUrl.replace('https://github.com/', '').replace('/', '-');
+  a.download = `security-report-${repoName}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 const SEVERITY_ORDER: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
@@ -225,7 +303,7 @@ const styles = `
   }
 `;
 
-export default function Report({ report, onReset }: Props) {
+export default function Report({ report, repoUrl, onReset }: Props) {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'ALL'>('ALL');
   const [filesOpen, setFilesOpen] = useState(false);
 
@@ -241,7 +319,10 @@ export default function Report({ report, onReset }: Props) {
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 18, color: '#fff' }}>
             Security Report
           </div>
-          <button className="btn-new" onClick={onReset}>← New Analysis</button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn-new" onClick={() => downloadReportMd(report, repoUrl)}>↓ Export Report</button>
+            <button className="btn-new" onClick={onReset}>← New Analysis</button>
+          </div>
         </div>
 
         {/* Overview */}

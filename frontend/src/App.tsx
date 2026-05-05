@@ -227,6 +227,7 @@ const styles = `
 export default function App() {
   const [state, setState] = useState<AppState>('idle');
   const [report, setReport] = useState<AnalysisReport | null>(null);
+  const [repoUrl, setRepoUrl] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -265,6 +266,7 @@ export default function App() {
       }
 
       setReport(data);
+      setRepoUrl(repoUrl);
       setState('done');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -275,6 +277,7 @@ export default function App() {
   function handleReset() {
     setState('idle');
     setReport(null);
+    setRepoUrl('');
     setErrorMsg('');
   }
 
@@ -321,7 +324,7 @@ export default function App() {
           )}
 
           {state === 'done' && report && (
-            <Report report={report} onReset={handleReset} />
+            <Report report={report} repoUrl={repoUrl} onReset={handleReset} />
           )}
         </main>
 

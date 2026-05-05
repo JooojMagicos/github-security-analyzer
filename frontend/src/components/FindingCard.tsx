@@ -13,6 +13,41 @@ const SEVERITY_CONFIG: Record<Severity, { color: string; bg: string; label: stri
   INFO:     { color: '#4a6080', bg: 'rgba(74,96,128,0.1)',  label: 'INFO'     },
 };
 
+function generateMd(finding: Finding): string {
+  const loc = finding.file + (finding.line ? `:${finding.line}` : '');
+  const evidence = finding.evidence
+    ? `\n## Evidence\n\`\`\`\n${finding.evidence}\n\`\`\`\n`
+    : '';
+
+  return `# ${finding.id}: ${finding.title}
+
+| Field | Value |
+|-------|-------|
+| **Severity** | ${finding.severity} |
+| **CWE** | ${finding.cwe} |
+| **File** | \`${loc}\` |
+
+## Description
+
+${finding.description}
+${evidence}
+## Recommendation
+
+${finding.recommendation}
+`;
+}
+
+function downloadMd(finding: Finding) {
+  const content = generateMd(finding);
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${finding.id}-${finding.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function FindingCard({ finding }: Props) {
   const [expanded, setExpanded] = useState(false);
   const cfg = SEVERITY_CONFIG[finding.severity] ?? SEVERITY_CONFIG.INFO;
@@ -129,6 +164,28 @@ export default function FindingCard({ finding }: Props) {
           <Section label="Recommendation">
             <p style={{ fontSize: 13, color: 'var(--green)', lineHeight: 1.7 }}>{finding.recommendation}</p>
           </Section>
+
+          <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => downloadMd(finding)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                color: 'var(--muted)',
+                padding: '6px 14px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontFamily: "'Space Mono', monospace",
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                transition: 'border-color 0.2s, color 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }}
+            >
+              ↓ Export .md
+            </button>
+          </div>
         </div>
       )}
     </div>

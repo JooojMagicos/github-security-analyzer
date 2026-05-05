@@ -1,0 +1,13 @@
+{
+  "name": "github-security-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix worker\" \"npm run dev --prefix frontend\"",
+    "deploy:worker": "npm run deploy --prefix worker",
+    "deploy:frontend": "npm run build --prefix frontend && npx wrangler pages deploy frontend/dist --project-name github-security-analyzer"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

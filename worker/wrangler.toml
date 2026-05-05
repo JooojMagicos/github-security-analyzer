@@ -1,0 +1,11 @@
+name = "github-security-analyzer"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# GROQ_API_KEY is set via: npx wrangler secret put GROQ_API_KEY
+
+[[routes]]
+pattern = "/analyze"
+zone_name = ""

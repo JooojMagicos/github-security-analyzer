@@ -263,6 +263,23 @@ const PATTERN_RULES: PatternRule[] = [
   },
 ];
 
+function isDefinitionContext(line: string): boolean {
+  const t = line.trim();
+  // Our own pattern description strings
+  if (t.includes('[Pattern Match]')) return true;
+  // Object key-value definition lines (re:, title:, description:, etc.)
+  if (/^(re:|title:|description:|recommendation:|cwe:)/.test(t)) return true;
+  // Comment lines
+  if (/^(\/\/|#|\s*\*|\*)/.test(t)) return true;
+  // Line is entirely a string literal — documentation, checklist items, array strings
+  if (/^['"`]/.test(t)) return true;
+  // JSX/HTML text content — match is inside rendered text, not executable code
+  if (/^<[a-zA-Z]/.test(t)) return true;
+  // Contains "(e.g." — example/documentation text
+  if (t.includes('(e.g.') || t.includes('e.g.,') || t.includes('e.g. ')) return true;
+  return false;
+}
+
 function scanForPatternFindings(file: { path: string; content: string }): RawFinding[] {
   const results: RawFinding[] = [];
   const seen = new Set<string>();
@@ -273,6 +290,10 @@ function scanForPatternFindings(file: { path: string; content: string }): RawFin
     seen.add(rule.title);
     const line = file.content.slice(0, match.index).split('\n').length;
     const snippet = file.content.split('\n')[line - 1]?.trim().slice(0, 120) ?? null;
+
+    // Skip if match is inside a definition, comment, or string describing the pattern
+    if (snippet && isDefinitionContext(snippet)) continue;
+
     results.push({
       title: rule.title, severity: rule.severity,
       file: file.path, line,

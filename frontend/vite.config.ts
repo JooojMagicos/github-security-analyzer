@@ -5,10 +5,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/analyze': {
-        target: 'http://localhost:8787',
-        changeOrigin: true,
-      },
+      '/get-files':       { target: 'http://localhost:8787', changeOrigin: true },
+      '/analyze-file':    { target: 'http://localhost:8787', changeOrigin: true },
+      '/filter-findings': { target: 'http://localhost:8787', changeOrigin: true },
     },
   },
 });

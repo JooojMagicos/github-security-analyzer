@@ -91,6 +91,24 @@ export default function FindingCard({ finding }: Props) {
           {cfg.label}
         </span>
 
+        {finding.description?.startsWith('[Pattern Match]') && (
+          <span
+            style={{
+              background: 'rgba(74,96,128,0.15)',
+              color: 'var(--muted)',
+              border: '1px solid rgba(74,96,128,0.3)',
+              borderRadius: 6,
+              padding: '2px 8px',
+              fontSize: 10,
+              letterSpacing: '0.08em',
+              fontFamily: "'Syne', sans-serif",
+              whiteSpace: 'nowrap',
+            }}
+          >
+            PATTERN
+          </span>
+        )}
+
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{

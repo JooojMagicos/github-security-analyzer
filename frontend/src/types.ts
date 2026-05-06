@@ -31,4 +31,11 @@ export interface AnalysisReport {
   filesAnalyzed: string[];
 }
 
-export type AppState = 'idle' | 'loading' | 'done' | 'error';
+export type AppState = 'idle' | 'fetching-files' | 'analyzing' | 'filtering' | 'done' | 'error';
+
+export interface AnalysisProgress {
+  totalFiles: number;
+  analyzedFiles: number;
+  currentFile: string;
+  findingsCount: number;
+}

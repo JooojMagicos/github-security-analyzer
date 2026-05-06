@@ -12,8 +12,8 @@ const styles = `
     margin: 32px auto 0;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
+    border-radius: 10px;
+    padding: 28px;
   }
 
   .progress-header {
@@ -49,7 +49,7 @@ const styles = `
 
   .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--green));
+    background: var(--accent);
     border-radius: 6px;
     transition: width 0.4s ease;
   }
@@ -132,7 +132,7 @@ const styles = `
   .progress-findings-badge.green {
     background: rgba(0,255,136,0.08);
     border-color: rgba(0,255,136,0.2);
-    color: var(--green);
+    color: var(--accent);
   }
 
   .btn-cancel {

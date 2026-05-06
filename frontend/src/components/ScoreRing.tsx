@@ -6,7 +6,7 @@ function scoreColor(score: number): string {
   if (score >= 80) return '#00ff88';
   if (score >= 60) return '#ffd600';
   if (score >= 40) return '#ff7043';
-  return '#ff4560';
+  return '#ff4444';
 }
 
 function scoreLabel(score: number): string {
@@ -34,7 +34,7 @@ export default function ScoreRing({ score }: Props) {
           cy={radius}
           r={normalizedRadius}
           fill="none"
-          stroke="#1e2d4a"
+          stroke="#1a1a1a"
           strokeWidth={stroke}
         />
         {/* Progress */}

@@ -17,16 +17,18 @@ const styles = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0e1a;
-    --panel: #0f1629;
-    --border: #1e2d4a;
-    --accent: #00d4ff;
+    --bg: #000;
+    --panel: #0d0d0d;
+    --panel-2: #141414;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.18);
+    --accent: #00ff88;
     --green: #00ff88;
     --yellow: #ffd600;
-    --red: #ff4560;
+    --red: #ff4444;
     --orange: #ff7043;
-    --text: #c8d8f0;
-    --muted: #4a6080;
+    --text: #ffffff;
+    --muted: #666666;
     --font-mono: 'Space Mono', monospace;
     --font-display: 'Syne', sans-serif;
   }
@@ -43,27 +45,36 @@ const styles = `
 
   .header {
     border-bottom: 1px solid var(--border);
-    padding: 20px 40px;
+    padding: 0 40px;
+    height: 56px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: var(--panel);
+    justify-content: space-between;
+    background: #000;
   }
 
-  .header-icon {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), #0080ff);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
-  }
+  .header-left { display: flex; flex-direction: column; gap: 2px; }
 
   .header-title {
     font-family: var(--font-display);
-    font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.02em;
+    font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.01em;
   }
 
-  .header-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .header-links { display: flex; align-items: center; gap: 20px; }
+
+  .header-link {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--muted); text-decoration: none;
+    font-family: var(--font-mono);
+    transition: color 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .header-link:hover { color: var(--accent); }
+  .header-link svg { flex-shrink: 0; }
+  .header-divider { width: 1px; height: 16px; background: var(--border-strong); }
 
   .main { flex: 1; padding: 48px 40px; max-width: 1100px; margin: 0 auto; width: 100%; }
 
@@ -75,15 +86,12 @@ const styles = `
     line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 16px;
   }
 
-  .hero h1 span {
-    background: linear-gradient(90deg, var(--accent), var(--green));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
+  .hero h1 span { color: var(--accent); }
 
   .hero p { color: var(--muted); font-size: 15px; max-width: 520px; margin: 0 auto; }
 
   .error-box {
-    background: rgba(255,69,96,0.08); border: 1px solid rgba(255,69,96,0.3);
+    background: rgba(255,68,68,0.06); border: 1px solid rgba(255,68,68,0.2);
     border-radius: 12px; padding: 32px; text-align: center;
     max-width: 520px; margin: 80px auto;
   }
@@ -92,8 +100,8 @@ const styles = `
   .error-box p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
 
   .btn-retry {
-    background: transparent; border: 1px solid var(--border); color: var(--text);
-    padding: 10px 24px; border-radius: 8px; font-family: var(--font-mono);
+    background: transparent; border: 1px solid var(--border-strong); color: var(--text);
+    padding: 10px 24px; border-radius: 6px; font-family: var(--font-mono);
     font-size: 13px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
   }
   .btn-retry:hover { border-color: var(--accent); color: var(--accent); }
@@ -223,10 +231,27 @@ export default function App() {
       <style>{styles}</style>
       <div className="app">
         <header className="header">
-          <div className="header-icon">🔐</div>
-          <div>
+          <div className="header-left">
             <div className="header-title">GitHub Security Analyzer</div>
-            <div className="header-sub">Powered by GPT-4o · GitHub Models · OWASP</div>
+            <div className="header-sub">GPT-4o · GitHub Models · OWASP</div>
+          </div>
+
+          <div className="header-links">
+            <a className="header-link" href="https://github.com/JooojMagicos/github-security-analyzer" target="_blank" rel="noopener noreferrer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+
+            <div className="header-divider" />
+
+            <a className="header-link" href="https://paypal.me/joanomagicos" target="_blank" rel="noopener noreferrer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 2.967.963 6.405-1.258 8.57 1.521-.79 2.594-2.158 3.049-4.065.332-1.396.124-2.785-1.184-3.964z"/>
+              </svg>
+              Support
+            </a>
           </div>
         </header>
 
@@ -270,21 +295,21 @@ export default function App() {
 }
 
 const howStyles = `
-  .how { max-width: 720px; margin: 48px auto 0; display: flex; flex-direction: column; gap: 32px; }
+  .how { max-width: 720px; margin: 48px auto 0; display: flex; flex-direction: column; gap: 24px; }
 
   .how-section {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
+    border-radius: 10px;
+    padding: 24px;
   }
 
   .how-section-title {
     font-family: 'Syne', sans-serif;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--muted);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     margin-bottom: 20px;
     display: flex;
@@ -301,29 +326,25 @@ const howStyles = `
 
   .how-steps { display: flex; flex-direction: column; gap: 16px; }
 
-  .how-step {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-  }
+  .how-step { display: flex; gap: 16px; align-items: flex-start; }
 
   .how-step-num {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.3);
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.2);
     color: var(--accent);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Mono', monospace;
   }
 
   .how-step-content { flex: 1; }
 
   .how-step-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #fff;
     font-family: 'Syne', sans-serif;
@@ -334,33 +355,29 @@ const howStyles = `
 
   .how-badges { display: flex; flex-direction: column; gap: 12px; }
 
-  .how-badge-row {
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-  }
+  .how-badge-row { display: flex; gap: 14px; align-items: flex-start; }
 
   .how-badge {
     flex-shrink: 0;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 2px 8px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.08em;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Mono', monospace;
     white-space: nowrap;
     margin-top: 1px;
   }
 
-  .badge-ai    { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.3); }
-  .badge-pat   { background: rgba(74,96,128,0.2); color: var(--muted);  border: 1px solid rgba(74,96,128,0.3); }
-  .badge-crit  { background: rgba(255,69,96,0.1); color: var(--red);    border: 1px solid rgba(255,69,96,0.3); }
-  .badge-high  { background: rgba(255,112,67,0.1);color: var(--orange); border: 1px solid rgba(255,112,67,0.3); }
-  .badge-med   { background: rgba(255,214,0,0.1); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
-  .badge-low   { background: rgba(0,212,255,0.08);color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .badge-ai    { background: rgba(0,255,136,0.08); color: var(--accent); border: 1px solid rgba(0,255,136,0.2); }
+  .badge-pat   { background: rgba(255,255,255,0.04); color: #888; border: 1px solid rgba(255,255,255,0.1); }
+  .badge-crit  { background: rgba(255,68,68,0.08); color: var(--red);    border: 1px solid rgba(255,68,68,0.2); }
+  .badge-high  { background: rgba(255,112,67,0.08);color: var(--orange); border: 1px solid rgba(255,112,67,0.2); }
+  .badge-med   { background: rgba(255,214,0,0.08); color: var(--yellow); border: 1px solid rgba(255,214,0,0.2); }
+  .badge-low   { background: rgba(255,255,255,0.04);color: #aaa; border: 1px solid rgba(255,255,255,0.1); }
 
   .how-badge-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
-  .how-badge-desc strong { color: var(--text); }
+  .how-badge-desc strong { color: #fff; }
 
   .how-limits { display: flex; flex-direction: column; gap: 8px; }
   .how-limit-row { display: flex; gap: 10px; font-size: 12px; color: var(--muted); line-height: 1.6; }
@@ -372,6 +389,48 @@ function HowItWorks() {
     <>
       <style>{howStyles}</style>
       <div className="how">
+
+        {/* Tips for better results */}
+        <div className="how-section" style={{ borderColor: 'rgba(0,212,255,0.2)', background: 'rgba(0,212,255,0.03)' }}>
+          <div className="how-section-title" style={{ color: 'var(--accent)' }}>Tips for better results</div>
+          <div className="how-steps">
+            {[
+              {
+                icon: '⚡',
+                title: 'Enable GitHub Code Scanning on your repo',
+                desc: 'Go to Settings → Code security and analysis → Enable Code scanning. This activates CodeQL, a professional SAST tool. The analyzer will pull its findings automatically — dramatically improving coverage.',
+              },
+              {
+                icon: '📦',
+                title: 'Enable Dependabot',
+                desc: 'Settings → Code security and analysis → Enable Dependabot alerts. The analyzer will include known CVEs from your dependencies, ranked by severity.',
+              },
+              {
+                icon: '🎯',
+                title: 'Focus on backend-heavy repositories',
+                desc: 'The analyzer excels at Node.js, Python, Go, Java, and PHP backends. Repositories with route handlers, database queries, and authentication logic yield the most relevant findings.',
+              },
+              {
+                icon: '🔑',
+                title: 'Use a GitHub token with security permissions',
+                desc: 'If the tool is self-hosted and configured with a token that has security_events scope, you will also see Secret Scanning results for repositories you own.',
+              },
+              {
+                icon: '📁',
+                title: 'Prefer focused repositories over monorepos',
+                desc: 'Large monorepos may hit the 80-file analysis limit before covering critical code. For best results, analyze individual services or modules separately.',
+              },
+            ].map((s, i) => (
+              <div className="how-step" key={i}>
+                <div className="how-step-num" style={{ background: 'rgba(0,212,255,0.08)', fontSize: 14 }}>{s.icon}</div>
+                <div className="how-step-content">
+                  <div className="how-step-title">{s.title}</div>
+                  <div className="how-step-desc">{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* How to use */}
         <div className="how-section">

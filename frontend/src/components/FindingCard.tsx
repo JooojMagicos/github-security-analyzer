@@ -6,11 +6,11 @@ interface Props {
 }
 
 const SEVERITY_CONFIG: Record<Severity, { color: string; bg: string; label: string }> = {
-  CRITICAL: { color: '#ff4560', bg: 'rgba(255,69,96,0.1)',  label: 'CRITICAL' },
-  HIGH:     { color: '#ff7043', bg: 'rgba(255,112,67,0.1)', label: 'HIGH'     },
-  MEDIUM:   { color: '#ffd600', bg: 'rgba(255,214,0,0.1)',  label: 'MEDIUM'   },
-  LOW:      { color: '#00d4ff', bg: 'rgba(0,212,255,0.1)',  label: 'LOW'      },
-  INFO:     { color: '#4a6080', bg: 'rgba(74,96,128,0.1)',  label: 'INFO'     },
+  CRITICAL: { color: '#ff4444', bg: 'rgba(255,68,68,0.08)',  label: 'CRITICAL' },
+  HIGH:     { color: '#ff7043', bg: 'rgba(255,112,67,0.08)', label: 'HIGH'     },
+  MEDIUM:   { color: '#ffd600', bg: 'rgba(255,214,0,0.08)',  label: 'MEDIUM'   },
+  LOW:      { color: '#aaaaaa', bg: 'rgba(170,170,170,0.06)', label: 'LOW'     },
+  INFO:     { color: '#555555', bg: 'rgba(85,85,85,0.1)',    label: 'INFO'     },
 };
 
 function generateMd(finding: Finding): string {
@@ -161,12 +161,12 @@ export default function FindingCard({ finding }: Props) {
             <Section label="Evidence">
               <pre
                 style={{
-                  background: '#060a14',
+                  background: '#000',
                   border: '1px solid var(--border)',
-                  borderRadius: 8,
+                  borderRadius: 6,
                   padding: '12px 16px',
                   fontSize: 12,
-                  color: '#a8c4e0',
+                  color: '#888',
                   overflow: 'auto',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
